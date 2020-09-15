@@ -131,9 +131,8 @@ if __name__ == "__main__":
     model = t.train()
     print("############  Evaluating model ############")
     t.evaluate(model)
-    # print("############   Saving model    ############")
-
-    # t.save_model(model)
+    print("############   Saving model    ############")
+    t.save_model(model)
     # print("############   Test saved model    ############")
     # t.evaluate_saved_model()
 
