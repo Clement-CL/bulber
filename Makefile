@@ -8,7 +8,7 @@ PROJECT_NAME=bulber
 
 ### GCP Storage - - - - - - - - - - - - - - - - - - - - - -
 
-BUCKET_NAME=bulber
+BUCKET_NAME=bulber_bucket_1
 
 ##### Data  - - - - - - - - - - - - - - - - - - - - - - - -
 
