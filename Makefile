@@ -8,7 +8,7 @@ PROJECT_NAME=bulber
 
 ### GCP Storage - - - - - - - - - - - - - - - - - - - - - -
 
-BUCKET_NAME=bumbulb-dl
+BUCKET_NAME=bulber
 
 ##### Data  - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -34,8 +34,7 @@ FILENAME=trainer
 
 ##### Job - - - - - - - - - - - - - - - - - - - - - - - - -
 
-JOB_NAME=bumbulb_training_model_$(shell date +'%Y%m%d_%H%M%S')
-
+JOB_NAME=bulber_training_model_$(shell date +'%Y%m%d_%H%M%S')
 
 ##### Machine Type - - - - - - - - - - - - - - - - - - - - - - - - -
 MACHINE_TYPE=n1-standard-16
