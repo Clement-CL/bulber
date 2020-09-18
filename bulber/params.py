@@ -1,1 +1,1 @@
-MODEL_VERSION = 'bulber_v1'
+MODEL_VERSION = 'bulber_v2'

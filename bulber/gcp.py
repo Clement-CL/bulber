@@ -9,9 +9,9 @@ def storage_upload(model_version=MODEL_VERSION, bucket=BUCKET_NAME, rm=False):
     storage_location = 'models/{}/versions/{}/{}'.format(
         MODEL_NAME,
         model_version,
-        'model.bumbulb')
+        'model.bulber')
     blob = client.blob(storage_location)
-    blob.upload_from_filename('bumbulb_VGG16_v4')
+    blob.upload_from_filename('bulber_v2')
     print("=> model.bumbulb uploaded to bucket {} inside {}".format(BUCKET_NAME, storage_location))
     if rm:
-        os.remove('model.bumbulb')
+        os.remove('model.bulber')

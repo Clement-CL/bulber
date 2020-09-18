@@ -42,7 +42,7 @@ class Trainer:
         self.input_shape = self.X_train[0].shape
         self.opt = None
         self.estimator = estimator
-        self.experiment_name = 'bumbulb_v5'
+        self.experiment_name = 'bulber_v2'
 
 
     def get_estimator(self):
@@ -66,7 +66,10 @@ class Trainer:
         tic = time.time()
         # add augmented images
         X_train = np.vstack((self.X_train, self.X_augmented))
-        y_train = np.concatenate((self.y, self.y_augmented), axis=None)
+        y_train = np.concatenate((self.y_train, self.y_augmented), axis=None)
+
+        # X_train = self.X_train
+        # y_train = self.y_train
 
         # fit encoder on y_train
         self.label_enc = LabelBinarizer()
@@ -121,9 +124,9 @@ class Trainer:
 if __name__ == "__main__":
     warnings.simplefilter(action='ignore', category=FutureWarning)
     # Get and clean data
-    experiment = "bumbulb_v5"
+    experiment = "bulber_v2"
     print("############   Loading Data   ############")
-    X, y, X_augmented, y_augmented = get_data(nrows=800)
+    X, y, X_augmented, y_augmented = get_data(augrows=20000)
     print(len(X), len(y), len(X_augmented), len(y_augmented))
     # instenciate Trainer()
     t = Trainer(X, y, X_augmented, y_augmented)

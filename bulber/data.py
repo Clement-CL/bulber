@@ -15,7 +15,7 @@ path_images = '/Users/clementchausserie-lapree/code/Clement-CL/bulber/data/image
 path_augmented = '/Users/clementchausserie-lapree/code/Clement-CL/bulber/data/image_augmented.csv'
 path_images_augmented = '/Users/clementchausserie-lapree/code/Clement-CL/bulber/data/images/images_augmented/'
 
-def get_data(nrows=500, local=True):
+def get_data(nrows=None, augrows=None, local=True):
 
     # client = storage.Client()
     # bucket = client.bucket(BUCKET_NAME)
@@ -36,7 +36,8 @@ def get_data(nrows=500, local=True):
         augmented_images = pd.read_csv(path_augmented)
         if nrows is not None:
             bumbulb_images = bumbulb_images.sample(n=nrows)
-            augmented_images = augmented_images.sample(n=nrows)
+        if augrows is not None:
+            augmented_images = augmented_images.sample(n=augrows)
         # iterate through the list to extract images and save them as arrays in an X and y list.
         # create an angle list to review predictions
         for index, rows in bumbulb_images.iterrows():
