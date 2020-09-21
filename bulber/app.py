@@ -1,18 +1,27 @@
 import streamlit as st
 from PIL import Image
-from bumbulb.data import get_data
+from resizeimage import resizeimage
+from bulber.data import get_data
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model
+from tensorflow.keras.applications.vgg16 import preprocess_input
+from joblib import load
+
 import time
+
+# import required csvs
+
+plants_full_info_df = pd.read_csv('data/all_species_care.csv')
+image_urls = pd.read_csv('data/links_to_images.csv').set_index('Species')
+
 
 # Page formatting and image display
 
-crawl = pd.read_csv('bumbulb/df_new2.csv')
 st.set_option('deprecation.showfileUploaderEncoding', False)
 st.markdown("<h1 style='text-align: left; color: red;'img/h1>", unsafe_allow_html=True)
-img = st.image('bumbulb/untitled.png', width=700, output_format='png')
+img = st.image('data/logo.png', width=400, output_format='png')
 
 st.header('Welcome to Bulber !')
 st.write('')
@@ -23,6 +32,7 @@ st.write('')
 
 # Follow the instructions below to get started
 # User defined inputs with dropdown menus
+
 st.markdown('**Please describe the room conditions for the plant**')
 
 display = ("Click me",
@@ -43,82 +53,75 @@ display = ("Click me, too",
             "Twice a week (Very often)")
 
 options = list(range(len(display)))
-value_water = st.selectbox("How many times do you want to water the plant?", options, format_func=lambda x: display[x])
+value_water = st.selectbox("How often will you be able to water the plant?", options, format_func=lambda x: display[x])
 
 st.write("")
 st.write("")
 st.write("")
 
 st.markdown('**Please upload an image of your plant**')
+
 # Image uploader, prediction, and data retrieval
 
 uploaded_file = st.file_uploader('')
+
 if uploaded_file is not None:
+    # preprocess the image
     image = Image.open(uploaded_file)
     st.image(image, caption='Uploaded Image.', use_column_width=True)
     st.write("")
-    pic_in_iter = np.array(Image.open(uploaded_file))
+    pic = np.array(resizeimage.resize_cover(image, [150, 150]))
     X_list = []
-    X_list.append(pic_in_iter)
+    X_list.append(pic)
     X = np.stack(X_list, axis=0)
+    X = preprocess_input(X)
 
-    reconstructed_model = load_model('bumbulb_VGG16_v2')
+    # load model and predict
+    reconstructed_model = load_model('bulber_v2')
     y_pred_recon = reconstructed_model.predict(X)
-    # label_enc = load('label_enc.joblib')
-    # columns = label_enc.classes_
-    columns = np.array(['Acanthus mollis', 'Carpobrotus edulis',
-                   'Alisma plantago-aquatica', 'Begonia evansiana', 'Cistus albidus',
-                   'Bryonia cretica', 'Arbutus unedo', 'Castanea sativa',
-                   'Centaurium erythraea', 'Gunnera tinctoria', 'Deutzia scabra',
-                   'Hypericum androsaemum', 'Crocosmia x crocosmiiflora',
-                   'Lilium bulbiferum', 'Lagerstroemia indica',
-                   'Magnolia grandiflora', 'Eucalyptus globulus', 'Nelumbo nucifera',
-                   'Bougainvillea spectabilis', 'Nymphaea alba',
-                   'Anacamptis pyramidalis', 'Antirrhinum majus',
-                   'Argentina anserina', 'Brugmansia suaveolens',
-                   'Athyrium filix-femina'])
+    label_enc = load('label_encoder.joblib')
+    columns = label_enc.classes_
 
+    # return top species and transpose to have species as index column
     y_pred_recon_df = pd.DataFrame(y_pred_recon, columns = columns)
     output = y_pred_recon_df.idxmax(axis=1)[0]
-
+    st.write(output)
     transpose = y_pred_recon_df.T
-    transpose
-
-    # st.write(type(output))
-    # st.write(output)
 
     pd.set_option('display.max_colwidth', -1)
-    info_needed = crawl[crawl.Species.str.contains(output, case=False)]
+    plant_info = plants_full_info_df[plants_full_info_df.Species.str.contains(output)]
 
-    # USER RESULTS
+    # Show prediction results
     st.subheader('**We think your species is...**')
 
-    st.write(info_needed['Species'].to_string()[5:])
+    st.write(plant_info['Species'].to_string()[5:])
+
 
     st.write("")
     st.write("")
 
     st.subheader('**...but you might know it by:**')
-    st.write(info_needed['Common names'].to_string()[5:])
+    st.write(plant_info['Common names'].to_string()[5:])
 
     st.write("")
     st.write("")
 
-    st.subheader(f"**Some information on {info_needed['Species'].iloc[0]}**")
-    st.write(info_needed['Description'].to_string()[5:])
+    st.subheader(f"**Some information on {plant_info['Species'].iloc[0]}**")
+    st.write(plant_info['Description'].to_string()[5:])
 
     st.write("")
     st.write("")
     st.write("")
 
-    crawl_indexed = crawl.set_index('Species')
+    crawl_indexed = plants_full_info_df.set_index('Species')
 
-    water_num = crawl_indexed.loc[info_needed['Species'].iloc[0]]['Water']
-    light_num = crawl_indexed.loc[info_needed['Species'].iloc[0]]['Light']
+    water_num = crawl_indexed.loc[plant_info['Species'].iloc[0]]['Water']
+    light_num = crawl_indexed.loc[plant_info['Species'].iloc[0]]['Light']
 
-    st.subheader('**Your results...**')
+    st.subheader('**Matching results...**')
+
     if value_water == water_num and value_light == light_num:
-      st.write(f"**Congratulations! You have a match. {info_needed['Species'].iloc[0]} will be happy in the conditions you provided.**")
+      st.write(f"**Congratulations! You have a match. {plant_info['Species'].iloc[0]} will be happy in the conditions you provided.**")
       st.balloons()
       st.write("")
       st.write("")
@@ -126,44 +129,31 @@ if uploaded_file is not None:
       st.write("")
 
       st.markdown('**Growing instructions**')
-      st.write(info_needed['How to Grow'].iloc[0])
+      st.write(plant_info['How to Grow'].iloc[0])
       st.write("")
       st.markdown('**Things to look out for**')
-      st.write(info_needed['How to Care'].iloc[0])
+      st.write(plant_info['How to Care'].iloc[0])
 
     else:
       st.write(f"Bad news :(")
       st.write("")
-      st.write(f"**{info_needed['Species'].iloc[0]} is not a good fit for the conditions you provided.**")
-      #st.image('https://bs.floristic.org/image/o/cbe32b44e6a411ebb28153d43afad1a4f78a4ee9', width=400)
-      y_pred_recon_df['match'] = value_water == water_num and value_light == light_num
+      st.write(f"**{plant_info['Species'].iloc[0]} is not a good fit for the conditions you provided.**")
 
       merged = pd.merge(crawl_indexed, transpose, left_index=True, right_index=True)
-
       matching_ones = merged.loc[merged['Light']==value_light].loc[merged['Water']==value_water]
-      # transpose
 
-      image_urls = pd.read_csv('bumbulb/links_to_images.csv').set_index('Species')
 
       full_merge = pd.merge(matching_ones, image_urls, left_index=True, right_index=True)
-
       full_merge['rounded_rank'] = round(full_merge.iloc[:,-2], 4)
-      # st.write(full_merge.iloc['Argentina anserina'])
-      # st.write(full_merge.iloc[:,-1].max())
-      # test= full_merge.loc[full_merge['rounded_rank'].max()]
-      # st.write(test)
       full_merge.reset_index(inplace=True)
-      row = full_merge.sort_values(by='rounded_rank', ascending=False).iloc[0]['index']
 
-      st.write(row)
+      if full_merge.empty:
+          st.write("Sorry but we do not have any species that meet your requirements at this stage")
+      else:
+          row = full_merge.sort_values(by='rounded_rank', ascending=False).iloc[0]['Species']
+          row
+          st.write("**But we might have one you will like and that would be very happy with you:**")
+          st.write(f"The {row}")
 
-      image_best = full_merge.sort_values(by='rounded_rank', ascending=False).iloc[0]['image_urls']
-      st.image(image_best)
-      # st.write(full_merge.index.get_slice_bound(full_merge.loc[full_merge['rounded_rank'].max()], side='left', kind='loc'))
-      # st.write(test)
-
-      #st.write(f"We think {full_merge.loc[full_merge.iloc[:,-2].max()]['Species']} would be a good fit, though.")
-
-      # matching_ones.loc[matching_ones['']]
-    # st.write("")
-    # st.write("")
+          image_best = full_merge.sort_values(by='rounded_rank', ascending=False).iloc[0]['img_url_flowers']
+          st.image(image_best, use_column_width=True)
