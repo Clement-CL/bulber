@@ -50,3 +50,10 @@ Step 3: The model matches the plant with a species and review the care requireme
 Result:
 if it's a match the user is provided with more information on the plant
 if it is not a match, we use the predictions of the model to find the nearest looking plant that meets the user's criteria.
+
+# Going further
+
+- Increase the number of species
+- Increase the dataset per species
+- Test higher quality images
+- Add more inputs for the user to specify his wishes (i.e. max size)
