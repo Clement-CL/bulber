@@ -1,70 +1,50 @@
-# Data analysis
-- Document here the project: bulber
-- Description: Project Description
-- Data Source:
-- Type of analysis:
+# What is bulber
 
-Please document the project the better you can.
+bulber is an app that uses a neural network to match users with a plant they like and that would like them back.
 
-# Stratup the project
+# Why bulber
 
-The initial setup.
+While flower markets are growing rapidly in the UK, the choice for the right plant remains a hassle when living in a flat with limited outdoor space and/or sun exposure.
+bulber will give you all the information you need to know if you are a match and if you’re not, it will introduce you to its nearest neighbors for a long lasting pairing
 
-Create virtualenv and install the project:
-```bash
-  $ sudo apt-get install virtualenv python-pip python-dev
-  $ deactivate; virtualenv ~/venv ; source ~/venv/bin/activate ;\
-    pip install pip -U; pip install -r requirements.txt
-```
+# Where did we source the data
 
-Unittest test:
-```bash
-  $ make clean install test
-```
+Query the Trefle and Wikipedia API
+- The Wiki API provided plants characteristics
+- The Trefle API provided plants requirements (light, water, care and grow instructions)
 
-Check for bulber in gitlab.com/{group}.
-If your project is not set please add it:
+Scraping PlantNet site
+- The site contains 7,554 species and 3,361,926 photos Western Europe only on the same page
 
-- Create a new project on `gitlab.com/{group}/bulber`
-- Then populate it:
+# Models used
 
-```bash
-  $ ##   e.g. if group is "{group}" and project_name is "bulber"
-  $ git remote add origin git@gitlab.com:{group}/bulber.git
-  $ git push -u origin master
-  $ git push -u origin --tags
-```
+Baseline 1: Random classification
+- 4% success rate (top probability is the correct species)
 
-Functionnal test with a script:
-```bash
-  $ cd /tmp
-  $ bulber-run
-```
-# Install
-Go to `gitlab.com/{group}/bulber` to see the project, manage issues,
-setup you ssh public key, ...
+Baseline 2: Convolutional neural network with three convolutional layers separated by three pooling layers and followed by a Flattening and a Dense layer.
+- 44% success rate (top probability is the correct species)
 
-Create a python3 virtualenv and activate it:
-```bash
-  $ sudo apt-get install virtualenv python-pip python-dev
-  $ deactivate; virtualenv -ppython3 ~/venv ; source ~/venv/bin/activate
-```
+Model 3: Transfer Learning with VGG16 from "Very Deep Convolutional Networks for Large-Scale Image Recognition”
+- The model also uses convolutional & max pooling layers but uses 16 and was trained on +14M images.
+- 60% success rate (top probability is the correct species)
 
-Clone the project and install it:
-```bash
-  $ git clone gitlab.com/{group}/bulber
-  $ cd bulber
-  $ pip install -r requirements.txt
-  $ make clean install test                # install and test
-```
-Functionnal test with a script:
-```bash
-  $ cd /tmp
-  $ bulber-run
-``` 
+# Data pre-processing (outside of VGG16 preprocessing from tensorflow.keras)
 
-# Continus integration
-## Github 
-Every push of `master` branch will execute `.github/workflows/pythonpackages.yml` docker jobs.
-## Gitlab
-Every push of `master` branch will execute `.gitlab-ci.yml` docker jobs.
+Review of our baseline model showed underperformance was correlated with number of images available.
+- I.e Species with low numbers of images yielded poor model performance
+- We also saw varied results between the types of images (flowers vs leaf images depending on the species)
+
+Test 1 - Undersampling: Train the model with balanced dataset by dropping images from the most represented spiecies
+- 48% success rate (top probability is the correct species)
+Test 2 - Oversampling: using Keras.ImageDataGenerator to increase the number of images for less represented species.
+- 60% success rate (top probability is the correct species)
+
+# Predictions and recommendation in Streamlit app
+
+Step 1: The user select the care he/she can provide to the plant
+Step 2: The user inputs an image of a plant he likes
+Step 3: The model matches the plant with a species and review the care requirements with the ones entered in step 1.
+
+Result:
+if it's a match the user is provided with more information on the plant
+if it is not a match we use the predictions of the model to find the nearest looking plant that meets the user's criteria.
