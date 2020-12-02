@@ -56,4 +56,4 @@ if it is not a match, we use the predictions of the model to find the nearest lo
 - Increase the number of species
 - Increase the dataset per species
 - Test higher quality images
-- Add more inputs for the user to specify his wishes (i.e. max size)
+- Add more inputs for the user to specify his/her wishes (i.e. max size)
